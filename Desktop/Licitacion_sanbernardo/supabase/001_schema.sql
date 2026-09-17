@@ -184,15 +184,34 @@ create table exportacion (
 -- ============================================================
 -- 2.1 Trigger obligatorio de auditoría
 -- ============================================================
+-- NOTA: la especificación original accedía a new.id_movimiento / new.id_articulo /
+-- new.id_lote directamente vía coalesce(), lo que falla ("record new has no
+-- field...") en cualquier tabla auditada que no tenga esas columnas exactas
+-- (proveedor, usuario_perfil, orden_abastecimiento, registro_temperatura).
+-- Se corrige accediendo vía to_jsonb(...)->>'campo', que devuelve NULL en vez
+-- de lanzar error cuando la columna no existe en esa tabla.
 create or replace function fn_log_auditoria()
 returns trigger as $$
+declare
+  entidad_id uuid;
+  fila jsonb;
 begin
+  fila := case when tg_op = 'DELETE' then to_jsonb(old) else to_jsonb(new) end;
+  entidad_id := coalesce(
+    (fila->>'id_movimiento')::uuid,
+    (fila->>'id_articulo')::uuid,
+    (fila->>'id_lote')::uuid,
+    (fila->>'id_proveedor')::uuid,
+    (fila->>'id_usuario')::uuid,
+    (fila->>'id_orden')::uuid,
+    (fila->>'id_registro')::uuid
+  );
   insert into log_auditoria (id_usuario, accion, entidad, id_entidad, valor_anterior, valor_nuevo)
   values (
     auth.uid(),
     tg_op,
     tg_table_name,
-    coalesce(new.id_movimiento, new.id_articulo, new.id_lote, old.id_movimiento, old.id_articulo, old.id_lote),
+    entidad_id,
     case when tg_op = 'DELETE' or tg_op = 'UPDATE' then to_jsonb(old) else null end,
     case when tg_op = 'INSERT' or tg_op = 'UPDATE' then to_jsonb(new) else null end
   );
