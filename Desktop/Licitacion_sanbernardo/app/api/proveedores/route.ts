@@ -9,10 +9,29 @@ const proveedorSchema = z.object({
   razon_social: z.string().min(1),
   direccion: z.string().optional(),
   telefono: z.string().optional(),
-  email: z.string().email().optional(),
+  email: z.union([z.string().email(), z.literal("")]).optional(),
   nombre_ejecutivo: z.string().optional(),
   telefono_ejecutivo: z.string().optional(),
 });
+
+// GET /api/proveedores — Listado liviano para selectores del frontend.
+export async function GET() {
+  const { supabase, unauthorized } = await requireUser();
+  if (unauthorized) return unauthorized;
+
+  const { data, error } = await supabase
+    .from("proveedor")
+    .select("id_proveedor, rut, razon_social")
+    .eq("activo", true)
+    .order("razon_social");
+
+  if (error) {
+    const mapped = mapPostgresError(error);
+    return NextResponse.json({ error: mapped.message }, { status: mapped.status });
+  }
+
+  return NextResponse.json({ data });
+}
 
 export async function POST(request: Request) {
   const { supabase, unauthorized } = await requireUser();
