@@ -105,3 +105,34 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ data: ordenCompleta }, { status: 201 });
 }
+
+// GET /api/abastecimiento/ordenes?bodega=&origen=&estado= — Listado de
+// órdenes de abastecimiento (sección 5.7), para el listado del frontend.
+export async function GET(request: Request) {
+  const { supabase, unauthorized } = await requireUser();
+  if (unauthorized) return unauthorized;
+
+  const { searchParams } = new URL(request.url);
+  const bodega = searchParams.get("bodega");
+  const origen = searchParams.get("origen");
+  const estado = searchParams.get("estado");
+
+  let query = supabase
+    .from("orden_abastecimiento")
+    .select(
+      "*, bodega_solicitante:id_bodega_solicitante(nombre), lineas:orden_abastecimiento_linea(*, articulo:id_articulo(nombre, codigo_interno))",
+    )
+    .order("fecha_creacion", { ascending: false });
+
+  if (bodega) query = query.eq("id_bodega_solicitante", bodega);
+  if (origen) query = query.eq("origen", origen);
+  if (estado) query = query.eq("estado", estado);
+
+  const { data, error } = await query;
+  if (error) {
+    const mapped = mapPostgresError(error);
+    return NextResponse.json({ error: mapped.message }, { status: mapped.status });
+  }
+
+  return NextResponse.json({ data });
+}

@@ -38,3 +38,33 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ data }, { status: 201 });
 }
+
+// GET /api/temperatura/registros?bodega=&desde=&hasta= — Histórico de
+// lecturas (sección 5.5), para el listado del frontend.
+export async function GET(request: Request) {
+  const { supabase, unauthorized } = await requireUser();
+  if (unauthorized) return unauthorized;
+
+  const { searchParams } = new URL(request.url);
+  const bodega = searchParams.get("bodega");
+  const desde = searchParams.get("desde");
+  const hasta = searchParams.get("hasta");
+
+  let query = supabase
+    .from("registro_temperatura")
+    .select("id_registro, temperatura, fuera_de_rango, fecha_registro, bodega:id_bodega(nombre)")
+    .order("fecha_registro", { ascending: false })
+    .limit(200);
+
+  if (bodega) query = query.eq("id_bodega", bodega);
+  if (desde) query = query.gte("fecha_registro", desde);
+  if (hasta) query = query.lte("fecha_registro", hasta);
+
+  const { data, error } = await query;
+  if (error) {
+    const mapped = mapPostgresError(error);
+    return NextResponse.json({ error: mapped.message }, { status: mapped.status });
+  }
+
+  return NextResponse.json({ data });
+}

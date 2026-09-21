@@ -119,3 +119,31 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ data: exportacion }, { status: 201 });
 }
+
+// GET /api/exportaciones — Historial de exportaciones (sección 5.11).
+export async function GET() {
+  const { supabase, unauthorized } = await requireUser();
+  if (unauthorized) return unauthorized;
+
+  const { data, error } = await supabase
+    .from("exportacion")
+    .select("*")
+    .order("fecha_generacion", { ascending: false });
+  if (error) {
+    const mapped = mapPostgresError(error);
+    return NextResponse.json({ error: mapped.message }, { status: mapped.status });
+  }
+
+  const idsUsuarios = Array.from(new Set((data ?? []).map((r) => r.id_usuario).filter(Boolean)));
+  const { data: usuarios } = idsUsuarios.length
+    ? await supabase
+        .from("usuario_perfil")
+        .select("id_usuario, nombre_completo")
+        .in("id_usuario", idsUsuarios)
+    : { data: [] as { id_usuario: string; nombre_completo: string }[] };
+  const nombrePorId = new Map((usuarios ?? []).map((u) => [u.id_usuario, u.nombre_completo]));
+
+  return NextResponse.json({
+    data: (data ?? []).map((r) => ({ ...r, generado_por: nombrePorId.get(r.id_usuario) ?? null })),
+  });
+}

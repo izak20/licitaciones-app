@@ -79,3 +79,28 @@ export async function POST(request: Request) {
     { status: 201 },
   );
 }
+
+// GET /api/inventario/tomas?bodega= — Listado de tomas de inventario
+// (sección 5.6), para el listado del frontend.
+export async function GET(request: Request) {
+  const { supabase, unauthorized } = await requireUser();
+  if (unauthorized) return unauthorized;
+
+  const { searchParams } = new URL(request.url);
+  const bodega = searchParams.get("bodega");
+
+  let query = supabase
+    .from("toma_inventario")
+    .select("*, bodega:id_bodega(nombre)")
+    .order("fecha_inicio", { ascending: false });
+
+  if (bodega) query = query.eq("id_bodega", bodega);
+
+  const { data, error } = await query;
+  if (error) {
+    const mapped = mapPostgresError(error);
+    return NextResponse.json({ error: mapped.message }, { status: mapped.status });
+  }
+
+  return NextResponse.json({ data });
+}

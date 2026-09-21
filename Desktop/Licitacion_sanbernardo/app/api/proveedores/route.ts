@@ -21,7 +21,9 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("proveedor")
-    .select("id_proveedor, rut, razon_social")
+    .select(
+      "id_proveedor, rut, razon_social, nombre_ejecutivo, telefono, email, documento_adjunto_url, activo",
+    )
     .eq("activo", true)
     .order("razon_social");
 
