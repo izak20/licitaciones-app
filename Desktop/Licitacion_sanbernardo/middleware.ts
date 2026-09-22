@@ -36,7 +36,16 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+  // /sistema.html es el frontend real (servido como estático desde
+  // /public); su propia pantalla de "login" es 100% decorativa y nunca
+  // llama a Supabase Auth, así que sin esta protección se podía abrir
+  // sin ninguna sesión real y solo fallar más tarde, a mitad de una
+  // acción, cuando una ruta de API exigiera el usuario autenticado.
+  const rutaProtegida =
+    request.nextUrl.pathname.startsWith("/dashboard") ||
+    request.nextUrl.pathname === "/sistema.html";
+
+  if (!user && rutaProtegida) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
