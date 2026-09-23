@@ -9,9 +9,16 @@ export default async function LoginPage({
 
   return (
     <main style={{ maxWidth: 360, margin: "80px auto" }}>
-      <h1>Ingresar</h1>
+      <img
+        src="/logo.jpeg"
+        alt="PMS-Panalbit"
+        width={64}
+        height={64}
+        style={{ borderRadius: 8, marginBottom: 12 }}
+      />
+      <h1>PMS-Panalbit</h1>
       <p style={{ color: "#555", fontSize: 14 }}>
-        Sistema de Gestión de Droguería Comunal
+        Plataforma de gestión de droguería comunal
       </p>
       <form action={login}>
         <div>
