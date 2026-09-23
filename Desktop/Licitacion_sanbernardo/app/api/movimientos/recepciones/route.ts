@@ -15,6 +15,7 @@ const recepcionSchema = z.object({
   id_centro_costo: z.string().uuid().optional(),
   con_reparos: z.boolean().optional(),
   observacion: z.string().optional(),
+  precio_unitario: z.number().positive().optional(),
 });
 
 export async function POST(request: Request) {
@@ -59,6 +60,7 @@ export async function POST(request: Request) {
       id_bodega: body.id_bodega,
       cantidad_disponible: body.cantidad,
       id_proveedor: body.id_proveedor ?? null,
+      precio_unitario: body.precio_unitario ?? null,
     })
     .select()
     .single();

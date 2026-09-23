@@ -18,11 +18,13 @@ export async function GET() {
       { header: "fecha_vencimiento", key: "fecha_vencimiento", ejemplo: "2028-04-30", ancho: 18 },
       { header: "cantidad", key: "cantidad", ejemplo: 100, ancho: 12 },
       { header: "proveedor_rut", key: "proveedor_rut", ejemplo: "", ancho: 16 },
+      { header: "precio_unitario", key: "precio_unitario", ejemplo: 1250, ancho: 16 },
     ],
     [
       "codigo_interno, bodega y cantidad son obligatorios.",
       "numero_lote y fecha_vencimiento son obligatorios si el artículo requiere trazabilidad por lote.",
-      "fecha_vencimiento en formato AAAA-MM-DD. proveedor_rut es opcional.",
+      "fecha_vencimiento en formato AAAA-MM-DD. proveedor_rut y precio_unitario son opcionales.",
+      "precio_unitario permite calcular reportes de gasto real; si se omite, ese lote no valoriza en esos reportes.",
     ],
   );
 

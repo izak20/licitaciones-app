@@ -56,6 +56,7 @@ export async function POST(request: Request) {
         id_bodega: idBodega,
         cantidad_disponible: cantidad,
         id_proveedor: f.proveedor_rut ? idProveedorPorRut.get(f.proveedor_rut) ?? null : null,
+        precio_unitario: f.precio_unitario ? Number(f.precio_unitario) || null : null,
       })
       .select("id_lote")
       .single();
