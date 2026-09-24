@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   let query = supabase
     .from("movimiento")
     .select(
-      "*, lote:id_lote(numero_lote, fecha_vencimiento, articulo:id_articulo(nombre, codigo_interno), proveedor:id_proveedor(razon_social)), bodega_origen:id_bodega_origen(nombre), bodega_destino:id_bodega_destino(nombre), centro_costo:id_centro_costo(nombre)",
+      "*, lote:id_lote(numero_lote, fecha_vencimiento, precio_unitario, articulo:id_articulo(nombre, codigo_interno), proveedor:id_proveedor(razon_social)), bodega_origen:id_bodega_origen(nombre), bodega_destino:id_bodega_destino(nombre), centro_costo:id_centro_costo(nombre)",
     )
     .order("fecha_movimiento", { ascending: false })
     .limit(200);
@@ -36,5 +36,16 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: mapped.message }, { status: mapped.status });
   }
 
-  return NextResponse.json({ data });
+  // movimiento.id_usuario referencia auth.users directamente (no
+  // usuario_perfil), así que no se puede anidar en el select de
+  // arriba: se resuelve el nombre aparte, igual que en log-auditoria.
+  const idsUsuarios = Array.from(new Set((data ?? []).map((r) => r.id_usuario).filter(Boolean)));
+  const { data: usuarios } = idsUsuarios.length
+    ? await supabase.from("usuario_perfil").select("id_usuario, nombre_completo").in("id_usuario", idsUsuarios)
+    : { data: [] as { id_usuario: string; nombre_completo: string }[] };
+  const nombrePorId = new Map((usuarios ?? []).map((u) => [u.id_usuario, u.nombre_completo]));
+
+  return NextResponse.json({
+    data: (data ?? []).map((r) => ({ ...r, registrado_por: nombrePorId.get(r.id_usuario) ?? null })),
+  });
 }
