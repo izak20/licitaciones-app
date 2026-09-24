@@ -102,5 +102,28 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: mapped.message }, { status: mapped.status });
   }
 
-  return NextResponse.json({ data });
+  // Cuántos artículos tiene cada toma y cuántos ya se contaron — para
+  // que se pueda ver de un vistazo cuánto avanzó cada responsable
+  // (varias personas pueden estar contando el mismo día, cada una en
+  // su propia toma).
+  const idsTomas = (data ?? []).map((t) => t.id_toma);
+  const { data: lineas } = idsTomas.length
+    ? await supabase.from("toma_inventario_linea").select("id_toma, cantidad_contada").in("id_toma", idsTomas)
+    : { data: [] as { id_toma: string; cantidad_contada: number | null }[] };
+
+  const conteoPorToma = new Map<string, { total: number; contados: number }>();
+  for (const l of lineas ?? []) {
+    const actual = conteoPorToma.get(l.id_toma) ?? { total: 0, contados: 0 };
+    actual.total += 1;
+    if (l.cantidad_contada !== null) actual.contados += 1;
+    conteoPorToma.set(l.id_toma, actual);
+  }
+
+  return NextResponse.json({
+    data: (data ?? []).map((t) => ({
+      ...t,
+      total_articulos: conteoPorToma.get(t.id_toma)?.total ?? 0,
+      articulos_contados: conteoPorToma.get(t.id_toma)?.contados ?? 0,
+    })),
+  });
 }
