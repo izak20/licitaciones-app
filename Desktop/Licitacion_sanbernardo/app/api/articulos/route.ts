@@ -30,7 +30,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from("articulo")
     .select(
-      "id_articulo, codigo_interno, nombre, requiere_lote, grupo, familia, es_controlado, requiere_cadena_frio, activo, unidad_medida, ubicacion",
+      "id_articulo, codigo_interno, nombre, requiere_lote, grupo, familia, es_controlado, requiere_cadena_frio, activo, unidad_medida, ubicacion, creado_en",
     )
     .eq("activo", true)
     .order("nombre");
