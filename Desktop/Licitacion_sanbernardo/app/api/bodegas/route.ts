@@ -12,7 +12,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("bodega")
-    .select("id_bodega, nombre, tipo, id_bodega_padre, direccion, requiere_cadena_frio, activa")
+    .select("id_bodega, nombre, tipo, id_bodega_padre, direccion, requiere_cadena_frio, activa, temp_minima, temp_maxima")
     .eq("activa", true)
     .order("nombre");
 
@@ -31,6 +31,8 @@ const bodegaSchema = z.object({
   id_bodega_padre: z.string().uuid().optional().nullable(),
   direccion: z.string().optional(),
   requiere_cadena_frio: z.boolean().optional(),
+  temp_minima: z.number().optional().nullable(),
+  temp_maxima: z.number().optional().nullable(),
 });
 
 export async function POST(request: Request) {

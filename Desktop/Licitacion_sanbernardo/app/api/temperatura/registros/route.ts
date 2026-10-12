@@ -52,7 +52,7 @@ export async function GET(request: Request) {
 
   let query = supabase
     .from("registro_temperatura")
-    .select("id_registro, temperatura, fuera_de_rango, fecha_registro, bodega:id_bodega(nombre)")
+    .select("id_registro, temperatura, fuera_de_rango, fecha_registro, bodega:id_bodega(nombre, temp_minima, temp_maxima)")
     .order("fecha_registro", { ascending: false })
     .limit(200);
 
