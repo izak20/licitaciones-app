@@ -13,6 +13,11 @@ const donacionSchema = z.object({
   numero_lote: z.string().optional(),
   fecha_vencimiento: z.string().optional(),
   donante: z.string().optional(),
+  // El documento de transporte lo emite quien envía la donación, no
+  // nosotros — a diferencia de un despacho propio (que sí genera su
+  // propio folio con fn_siguiente_folio_despacho), acá sólo se deja
+  // constancia del número que el donante haya entregado, si trajo uno.
+  guia_despacho: z.string().optional(),
   observacion: z.string().optional(),
 });
 
@@ -70,6 +75,7 @@ export async function POST(request: Request) {
       id_bodega_destino: body.id_bodega,
       cantidad: body.cantidad,
       estado: "recepcionado_sin_reparos",
+      folio: body.guia_despacho || null,
       observacion,
       id_usuario: user.id,
     })
