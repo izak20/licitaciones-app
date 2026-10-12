@@ -28,7 +28,11 @@ export async function GET(request: Request) {
   if (tipo) query = query.in("tipo", tipo.split(","));
   if (bodega) query = query.or(`id_bodega_origen.eq.${bodega},id_bodega_destino.eq.${bodega}`);
   if (desde) query = query.gte("fecha_movimiento", desde);
-  if (hasta) query = query.lte("fecha_movimiento", hasta);
+  // "hasta" llega como fecha simple (YYYY-MM-DD); sin la hora, lte
+  // la interpreta como medianoche y descarta todo lo del mismo día
+  // ocurrido después — se completa al final del día para que el
+  // rango sea inclusivo de verdad.
+  if (hasta) query = query.lte("fecha_movimiento", hasta + "T23:59:59.999");
 
   const { data, error } = await query;
   if (error) {

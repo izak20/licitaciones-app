@@ -24,7 +24,7 @@ export async function obtenerAnalisisConsumo(
 
   if (params.bodega) query = query.eq("id_bodega_origen", params.bodega);
   if (params.desde) query = query.gte("fecha_movimiento", params.desde);
-  if (params.hasta) query = query.lte("fecha_movimiento", params.hasta);
+  if (params.hasta) query = query.lte("fecha_movimiento", params.hasta + "T23:59:59.999");
 
   const { data, error } = await query;
   if (error) return { error };

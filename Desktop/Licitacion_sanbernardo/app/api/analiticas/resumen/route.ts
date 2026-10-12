@@ -23,7 +23,11 @@ export async function GET(request: Request) {
   const hastaParam = searchParams.get("hasta");
 
   const desdeDate = desdeParam ? new Date(desdeParam) : new Date(ahora.getFullYear(), ahora.getMonth() - 5, 1);
-  const hastaDate = hastaParam ? new Date(hastaParam) : ahora;
+  // Sin hora, un "hasta" explícito se interpretaría como medianoche
+  // y descartaría los movimientos del propio día (lte compara contra
+  // las 00:00:00) — se completa al final del día para que el rango
+  // sea inclusivo de verdad.
+  const hastaDate = hastaParam ? new Date(hastaParam + "T23:59:59.999") : ahora;
 
   const [{ data: bodegas }, { data: movimientos, error }] = await Promise.all([
     supabase.from("bodega").select("id_bodega, nombre").eq("activa", true),

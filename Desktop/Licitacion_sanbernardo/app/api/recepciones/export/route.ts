@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
   if (bodega) query = query.eq("id_bodega_destino", bodega);
   if (desde) query = query.gte("fecha_movimiento", desde);
-  if (hasta) query = query.lte("fecha_movimiento", hasta);
+  if (hasta) query = query.lte("fecha_movimiento", hasta + "T23:59:59.999");
 
   const { data, error } = await query;
   if (error) {

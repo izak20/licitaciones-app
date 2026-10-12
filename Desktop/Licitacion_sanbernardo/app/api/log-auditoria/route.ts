@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     .limit(200);
 
   if (desde) query = query.gte("fecha_hora", desde);
-  if (hasta) query = query.lte("fecha_hora", hasta);
+  if (hasta) query = query.lte("fecha_hora", hasta + "T23:59:59.999");
   if (q) query = query.or(`accion.ilike.%${q}%,entidad.ilike.%${q}%`);
 
   const { data, error } = await query;
