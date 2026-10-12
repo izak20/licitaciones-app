@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   let query = supabase
     .from("movimiento")
     .select(
-      "*, lote:id_lote(numero_lote, fecha_vencimiento, precio_unitario, articulo:id_articulo(nombre, codigo_interno), proveedor:id_proveedor(razon_social)), bodega_origen:id_bodega_origen(nombre), bodega_destino:id_bodega_destino(nombre), centro_costo:id_centro_costo(nombre)",
+      "*, lote:id_lote(numero_lote, fecha_vencimiento, precio_unitario, articulo:id_articulo(nombre, codigo_interno, grupo, familia), proveedor:id_proveedor(razon_social)), bodega_origen:id_bodega_origen(nombre), bodega_destino:id_bodega_destino(nombre), centro_costo:id_centro_costo(nombre)",
     )
     .order("fecha_movimiento", { ascending: false })
     .limit(200);
