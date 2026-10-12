@@ -27,17 +27,30 @@ export async function GET() {
       supabase.from("bodega").select("id_bodega, nombre").eq("activa", true),
       supabase
         .from("movimiento")
-        .select("cantidad, id_bodega_origen, lote:id_lote(precio_unitario, articulo:id_articulo(grupo))")
+        .select(
+          "cantidad, fecha_movimiento, folio, id_bodega_origen, lote:id_lote(precio_unitario, articulo:id_articulo(nombre, grupo))",
+        )
         .in("tipo", ["despacho", "vale_consumo"])
         .gte("fecha_movimiento", desdeIso),
       supabase
         .from("stock_parametro")
-        .select("id_articulo, id_bodega, stock_minimo, articulo:id_articulo(grupo)"),
+        .select("id_articulo, id_bodega, stock_minimo, articulo:id_articulo(nombre, grupo)"),
       stockPorArticuloBodega(supabase),
     ]);
 
+  type DetalleGasto = {
+    articulo: string;
+    cantidad: number;
+    precio_unitario: number;
+    total: number;
+    fecha: string;
+    folio: string | null;
+  };
+  type DetalleQuiebre = { articulo: string; stock_actual: number; stock_minimo: number };
+
   const grupos = new Set<string>();
   const gastoPorClave = new Map<string, number>();
+  const detalleGastoPorClave = new Map<string, DetalleGasto[]>();
   const sinPrecioPorBodega = new Map<string, number>();
   for (const m of movimientosGasto ?? []) {
     const idBodega = m.id_bodega_origen;
@@ -52,11 +65,22 @@ export async function GET() {
       continue;
     }
     const clave = idBodega + "|" + grupo;
-    const gasto = Number(m.cantidad) * Number(precio);
-    gastoPorClave.set(clave, (gastoPorClave.get(clave) ?? 0) + gasto);
+    const total = Number(m.cantidad) * Number(precio);
+    gastoPorClave.set(clave, (gastoPorClave.get(clave) ?? 0) + total);
+    const detalle = detalleGastoPorClave.get(clave) ?? [];
+    detalle.push({
+      articulo: articulo?.nombre ?? "Artículo",
+      cantidad: Number(m.cantidad),
+      precio_unitario: Number(precio),
+      total: Math.round(total * 100) / 100,
+      fecha: m.fecha_movimiento,
+      folio: m.folio ?? null,
+    });
+    detalleGastoPorClave.set(clave, detalle);
   }
 
   const quiebresPorClave = new Map<string, number>();
+  const detalleQuiebresPorClave = new Map<string, DetalleQuiebre[]>();
   for (const p of parametros ?? []) {
     const articulo = desanidar(p.articulo);
     const grupo = articulo?.grupo || SIN_GRUPO;
@@ -66,6 +90,13 @@ export async function GET() {
     if (stockActual <= Number(p.stock_minimo)) {
       const clave = p.id_bodega + "|" + grupo;
       quiebresPorClave.set(clave, (quiebresPorClave.get(clave) ?? 0) + 1);
+      const detalle = detalleQuiebresPorClave.get(clave) ?? [];
+      detalle.push({
+        articulo: articulo?.nombre ?? "Artículo",
+        stock_actual: stockActual,
+        stock_minimo: Number(p.stock_minimo),
+      });
+      detalleQuiebresPorClave.set(clave, detalle);
     }
   }
 
@@ -78,6 +109,8 @@ export async function GET() {
         grupo,
         gasto: Math.round((gastoPorClave.get(clave) ?? 0) * 100) / 100,
         quiebres: quiebresPorClave.get(clave) ?? 0,
+        detalle_gasto: detalleGastoPorClave.get(clave) ?? [],
+        detalle_quiebres: detalleQuiebresPorClave.get(clave) ?? [],
       };
     }),
   );
