@@ -2,9 +2,8 @@ import { login } from "./actions";
 
 // Antes esta pantalla era HTML sin ningún estilo (logo de 64×64,
 // formulario crudo): el usuario pidió un logo más grande y claro, un
-// fondo con la foto real del edificio municipal (difuminada, para que
-// siga leyéndose todo encima) y una explicación de qué significa
-// "PMS" junto al nombre de la plataforma.
+// fondo con la foto real del edificio municipal y una explicación de
+// qué significa "PMS" junto al nombre de la plataforma.
 export default async function LoginPage({
   searchParams,
 }: {
@@ -26,25 +25,15 @@ export default async function LoginPage({
       }}
     >
       <img
-        src="/fondo-municipalidad.jpeg"
+        src="/fondo-login.jpg"
         alt=""
         style={{
           position: "absolute",
-          inset: -16,
-          width: "calc(100% + 32px)",
-          height: "calc(100% + 32px)",
-          objectFit: "cover",
-          filter: "blur(7px)",
-          zIndex: 0,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
           inset: 0,
-          background:
-            "linear-gradient(158deg, rgba(45,62,79,0.90) 0%, rgba(63,84,104,0.86) 62%, rgba(10,59,101,0.92) 100%)",
-          zIndex: 1,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          zIndex: 0,
         }}
       />
       <main
