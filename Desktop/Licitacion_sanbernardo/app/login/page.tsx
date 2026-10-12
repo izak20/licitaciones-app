@@ -25,7 +25,7 @@ export default async function LoginPage({
       }}
     >
       <img
-        src="/fondo-login.jpg"
+        src="/fondo-municipalidad.jpeg"
         alt=""
         style={{
           position: "absolute",
